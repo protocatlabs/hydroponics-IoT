@@ -61,11 +61,16 @@ timeClient.update();
 Serial.println(timeClient.getEpochTime()); // to print the UNIX time
 ```
 
-### Step 6: POST http request
+## Step 6: POST http request
 https://arduinojson.org/v6/how-to/use-arduinojson-with-esp8266httpclient/
 
 I used a API key from https://requestbin.com/ for debugging
 
 
 Issues: This method currently works easily with HTTP requests, but has issues with HTTPS requests.
+
+## Step 7: Delete ThingSpeak code
+
+Not done yet, but should be pretty straight forward
+
 
