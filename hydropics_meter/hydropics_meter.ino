@@ -1,16 +1,26 @@
+#include <NTPClient.h>                                           //Inlcude NTP Client in order to get Unix Time
+#include <ArduinoJson.h>                                         // Include library for JSON Creation
 
 #include <Ezo_i2c.h>                                             //include the EZO I2C library from https://github.com/Atlas-Scientific/Ezo_I2c_lib
 #include <Wire.h>                                                //include Arduinos i2c library
 #include <ESP8266WiFi.h>                                         //include esp8266 wifi library 
+#include <ESP8266HTTPClient.h>
+#include <WiFiUdp.h>    //No idea what this actually does says PJ but is needed for the time stuff
 #include "ThingSpeak.h"                                          //include thingspeak library
+
+
 WiFiClient  client;                                              //declare that this device connects to a Wi-Fi network,create a connection to a specified internet IP address
 
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+const long utcOffsetInSeconds = 3600; // UTC offset for time
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 //----------------Fill in your Wi-Fi / ThingSpeak Credentials-------
-const String ssid = "Wifi Name";                                 //The name of the Wi-Fi network you are connecting to
-const String pass = "Wifi Password";                             //Your WiFi network password
-const long myChannelNumber = NNNNNNN;                            //Your Thingspeak channel number
-const char * myWriteAPIKey = "XXXXXXXXXXXXXXXX";                 //Your ThingSpeak Write API Key
+const String ssid = "Arambewattha WIFI";                                 //The name of the Wi-Fi network you are connecting to
+const String pass = "12345678";                             //Your WiFi network password
+const long myChannelNumber = 964626;                            //Your Thingspeak channel number
+const char * myWriteAPIKey = "Y8JFTDGASMCRF5AS";                 //Your ThingSpeak Write API Key
 //------------------------------------------------------------------
 
 Ezo_board PH = Ezo_board(99, "PH");                              //create a pH circuit object, who's I2C address is 99 and name is "PH"
@@ -32,18 +42,36 @@ const unsigned long reading_delay = 815;                                        
 const unsigned long loop_delay = 15000;
 
 
+
 void setup() {                                                                    //set up the hardware
   Wire.begin();                                                                   //enable I2C port
   Serial.begin(9600);                                                             //enable serial port, set baud rate to 9600
+  Serial.println("starting sketch");
   WiFi.mode(WIFI_STA);                                                            //set ESP8266 mode as a station to be connected to wifi network
   ThingSpeak.begin(client);                                                       //enable ThingSpeak connection
+
+  timeClient.begin(); // begin time client
+  
+  
 }
 
 
 void loop() {
+  StaticJsonDocument<250> doc; // Set up JSON
+  doc["type"] = "MFC";
+  doc["unitid"] = "000235";
+  doc["timestamp"] = timeClient.getEpochTime();
+  JsonArray parameters = doc.createNestedArray("parameters");
+
+  // Declare HTTP Client
+  HTTPClient http;
+
+
+  
                                                                          //connect or reconnect to WiFi
   if (WiFi.status() != WL_CONNECTED) {                                            //if we are not connected (when WL_CONNECTED =1 we have a successful connection)
-      WiFi.begin(ssid, pass);                                                     //initialize wifi connection
+      WiFi.begin(ssid, pass);
+      //initialize wifi connection
 
     while (WiFi.status() != WL_CONNECTED) {                                       //while we are not connected 
       Serial.print(".");                                                          //print "........connected"
@@ -65,7 +93,10 @@ void loop() {
 //------------------------------------------------------------------
 
     case READ_TEMP_AND_REQUEST_PH_EC:                                             //when we are in the second step
-      if (millis() >= next_step_time) {                                           //check to see if enough time has past, if it has                    
+      if (millis() >= next_step_time) {                                           //check to see if enough time has past, if it has   
+
+      timeClient.update();
+      Serial.println(timeClient.getEpochTime());
             
         RTD.receive_read_cmd();                                                   //get the temp reading  
         Serial.print(RTD.get_name()); Serial.print(": ");                         //print the name of the circuit we just got a reading from
@@ -100,7 +131,12 @@ void loop() {
         
         if(reading_succeeded(PH) == true){                                                    //if the pH reading has been received and it is valid
           Serial.print(PH.get_last_received_reading(), 2);                                    //print the reading (with 2 decimal places)
-          ThingSpeak.setField(1, String(PH.get_last_received_reading(), 2));                             //assign pH readings to first column of thingspeak channel                                     
+          ThingSpeak.setField(1, String(PH.get_last_received_reading(), 2));                             //assign pH readings to first column of thingspeak channel    
+
+
+          JsonObject feed1 = parameters.createNestedObject();
+          feed1["name"] = "ph";
+          feed1["value"] = String(PH.get_last_received_reading(),2);
         }
 
         Serial.print(" ");                                                                    //print a blank space so the output string on the serial monitor is easy to read
@@ -110,19 +146,52 @@ void loop() {
         
         if(reading_succeeded(EC) == true){                                                    //if the EC reading has been received and it is valid
           Serial.print(EC.get_last_received_reading(), 0);                                    //print the reading (with 0 decimal places)
-          ThingSpeak.setField(2, String(EC.get_last_received_reading(),0));                             //assign EC readings to the second column of thingspeak channel                                    
+          ThingSpeak.setField(2, String(EC.get_last_received_reading(),0));                             //assign EC readings to the second column of thingspeak channel   
+
+          JsonObject feed2 = parameters.createNestedObject();
+          feed2["name"] = "electrical_conductivity";
+          feed2["value"] = String(EC.get_last_received_reading(),0);
         }
+        Serial.println();
+        Serial.println(EC.get_last_received_reading());
+        
 
         Serial.println();                                                                     //print a new line so the output string on the serial monitor is easy to read
+        
 
         if(RTD.get_error() == Ezo_board::SUCCESS){                                            //if the RTD reading was successful (back in step 1)
           ThingSpeak.setField(3, String(RTD.get_last_received_reading(),1));                            //assign temperature readings to the third column of thingspeak channel
+
+          JsonObject feed3 = parameters.createNestedObject();
+          feed3["name"] = "nutrient_soil_temp";
+          feed3["value"] = String(RTD.get_last_received_reading(),1);
+
         }
 
+        serializeJsonPretty(doc, Serial);
+
+          // Serialize JSON document
+          String json;
+          serializeJson(doc, json);
+        
+          // Send request
+          if (http.begin("http://enin1plkggw78.x.pipedream.net/")) {
+            http.POST(json);
+          
+            // Read response
+            Serial.print(http.getString());
+
+            // Disconnect
+            http.end();
+          } else {
+            Serial.printf("[HTTP] GET... failed. error");
+            }
+        
+        Serial.println(); 
         return_code = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);                 //upload the data to thingspeak, read the return code 
 
         if (return_code == 200) {                                                             //check thingspeak return code if it is 200 then the upload was a success
-          Serial.println("success");                                                          //print "success"
+          Serial.println("Thingspeak upload success");                                                          //print "success"
         }
         else {                                                                                //if the thingspeak return code was not 200  
           Serial.println("upload error, code: " + String(return_code));                       //print "upload error, code:" and whatever number is in the return_code var  
@@ -130,6 +199,7 @@ void loop() {
         Serial.println();                                                                     //print a new line so the output string on the serial monitor is easy to read
         next_step_time =  millis() + loop_delay;                                              //update the time for the next reading loop 
         current_step = REQUEST_TEMP;                                                          //switch back to step 1 
+        
       }
       break;                                                                                  //break out of this we are done
   }
