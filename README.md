@@ -1,3 +1,12 @@
+# Flashing the Code
+
+Provided that all drivers are installed on your computer (see step by step below) the following steps will flash the hardware
+
+1. Open `hydroponics_meter>hydroponics_meter.io` in arduino IDE. 
+2. Modify lines 15-22 to set the wifi credentials, and API's, and unitID's
+3. Click upload
+4. Check the serial monitor to make sure that everything is working
+
 # Step by step instructions for replicating this code
 
 ## Step 1: Blink the LED
