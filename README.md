@@ -83,9 +83,9 @@ The size of the JSON needs to be predefined. It is currently set at 250 using th
 
 If you increase the content in the JSON, and the JSON is being cut off, try increase the size from 250 - 300 or more. There are also options for dynamic JSON sizing. However for this application, as the data is known, it is more efficient to declare it as a static
 
-## Ph not reading
+## Electrical Conductivity not reading
 
-For some reason I was having issues with the Ph meter. I wasn't sure if it was an error with the sensor itself. I therefore didn't spend any time debugging it as it could result in high time consumption. I assumed it was hardware related, as even with the default software it still didn't read.
+For some reason I was having issues with the EC meter. I wasn't sure if it was an error with the sensor itself. I therefore didn't spend any time debugging it as it could result in high time consumption. I assumed it was hardware related, as even with the default software it still didn't read.
 
 
 
