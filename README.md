@@ -1,5 +1,4 @@
-# hydroponics_IoT
-Arduino code for the embedded software of the hydropinics kit
+# Step by step instructions for replicating this code
 
 ## Step 1: Blink the LED
 
@@ -64,7 +63,7 @@ Serial.println(timeClient.getEpochTime()); // to print the UNIX time
 ## Step 6: POST http request
 https://arduinojson.org/v6/how-to/use-arduinojson-with-esp8266httpclient/
 
-I used a API key from https://requestbin.com/ for debugging
+I used a API key from https://requestbin.com/ for debugging. I recommend creating an account and doing the same
 
 
 Issues: This method currently works easily with HTTP requests, but has issues with HTTPS requests.
