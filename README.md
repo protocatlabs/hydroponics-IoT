@@ -71,6 +71,25 @@ Issues: This method currently works easily with HTTP requests, but has issues wi
 
 ## Step 7: Delete ThingSpeak code
 
-Not done yet, but should be pretty straight forward
+Not done yet, however I commented `DD` for code that can be deleted that are thingspeak related. I recommend having this done by the inhouse engineer
+
+
+# Possible Future Issues
+
+## JSON being cut short
+
+The size of the JSON needs to be predefined. It is currently set at 250 using the line
+
+`StaticJsonDocument<250> doc;`
+
+If you increase the content in the JSON, and the JSON is being cut off, try increase the size from 250 - 300 or more. There are also options for dynamic JSON sizing. However for this application, as the data is known, it is more efficient to declare it as a static
+
+## Ph not reading
+
+For some reason I was having issues with the Ph meter. I wasn't sure if it was an error with the sensor itself. I therefore didn't spend any time debugging it as it could result in high time consumption. I assumed it was hardware related, as even with the default software it still didn't read.
+
+
+
+
 
 
