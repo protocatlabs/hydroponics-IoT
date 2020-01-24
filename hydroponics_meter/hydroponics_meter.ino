@@ -13,8 +13,8 @@ WiFiClient  client;                                              //declare that 
 
 
 //----------------Fill in Wifi / HTTP or ThingSpeak Credentials -------
-const String ssid = "Jayatissa";                                 //The name of the Wi-Fi network you are connecting to
-const String pass = "xxxxxxxxxxxx";                             //Your WiFi network password
+const String ssid = "PJ's iPhone";                                 //The name of the Wi-Fi network you are connecting to
+const String pass = "password";                             //Your WiFi network password
 const long myChannelNumber = 964626;                            //DD- Your Thingspeak channel number
 const char * myWriteAPIKey = "Y8JFTDGASMCRF5AS";                 //DD- Your ThingSpeak Write API Key
 const String httpAddress = "http://sensing.sg/greenilai/gen2/post_generic.php"; // API key for sending http requests
@@ -62,11 +62,15 @@ void setup() {                                                                  
 
 
 void loop() {
-  StaticJsonDocument<250> doc;                                                    // Set up JSON with size 250. If JSON size is increased in the future, increase this number
-  doc["type"] = "MFC";
-  doc["unitid"] = unitID;                                                       // Set unit ID of device for JSON output (defined above)
-  doc["timestamp"] = timeClient.getEpochTime();                                   // Get UNIX time at UTC and set to timestamp
-  JsonArray parameters = doc.createNestedArray("parameters");                     // Set a nested array called parameters where data is stored
+  StaticJsonDocument<300> doc;                                                    // Set up JSON with size 300. If JSON size is increased in the future, increase this number
+  
+  JsonArray dataArray = doc.createNestedArray("data");
+  JsonObject data = dataArray.createNestedObject();
+  
+  data["type"] = "MFC";
+  data["unitid"] = unitID;                                                       // Set unit ID of device for JSON output (defined above)
+  data["timestamp"] = timeClient.getEpochTime();                                   // Get UNIX time at UTC and set to timestamp
+  JsonArray parameters = data.createNestedArray("parameters");                     // Set a nested array called parameters where data is stored
 
   // Declare HTTP Client
   HTTPClient http;
