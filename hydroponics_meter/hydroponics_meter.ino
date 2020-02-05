@@ -172,7 +172,7 @@ void loop() {
           ThingSpeak.setField(3, String(RTD.get_last_received_reading(),1));                            //assign temperature readings to the third column of thingspeak channel
 
           JsonObject feed3 = parameters.createNestedObject();                                 // Same as above for feed1 and feed2
-          feed3["name"] = "nutrient_soil_temp";
+          feed3["name"] = "nutrient_sol_temp";
           feed3["value"] = String(RTD.get_last_received_reading(),1);
 
         }
